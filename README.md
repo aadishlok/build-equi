@@ -11,7 +11,11 @@ A modern, ChatGPT-style interface for asking complex questions about Shakespeare
 - **RAG System**: Retrieval-Augmented Generation for accurate answers
 - **Responsive Design**: Works on desktop and mobile devices
 
-## 🚀 Quick Start
+## 🚀 Live Demo
+
+**Try it now**: [https://shakespeare-ai.vercel.app](https://shakespeare-ai.vercel.app)
+
+## 🛠️ Quick Start
 
 ### Prerequisites
 - Node.js 18+ 
@@ -50,6 +54,38 @@ A modern, ChatGPT-style interface for asking complex questions about Shakespeare
    ```
    http://localhost:3000
    ```
+
+## 🌐 Deployment
+
+### Deploy to Vercel (Recommended)
+
+This project is optimized for Vercel deployment with auto-deployment on push to main branch.
+
+1. **Fork/Clone this repository**
+2. **Sign up at [vercel.com](https://vercel.com)**
+3. **Import your GitHub repository**
+4. **Add environment variables**:
+   ```
+   OPENAI_API_KEY=your_key_here
+   GEMINI_API_KEY=your_key_here
+   ```
+5. **Deploy** - Automatic deployments on every push!
+
+### Manual Deployment
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy
+vercel
+
+# Set environment variables
+vercel env add GEMINI_API_KEY
+vercel env add OPENAI_API_KEY
+
+# Redeploy with environment variables
+vercel --prod
+```
 
 ## 🎯 Usage
 
@@ -147,9 +183,9 @@ src/
 
 ## 🔒 Security & Privacy
 
-- **API Keys**: Stored securely in `.env.local` (not in repository)
+- **API Keys**: Stored securely in environment variables
 - **Data Privacy**: No user data is stored or transmitted
-- **Local Processing**: All data processing happens locally
+- **Local Processing**: All data processing happens locally or on Vercel
 - **Secure Headers**: Proper CORS and security headers
 
 ## 🐛 Troubleshooting
@@ -188,6 +224,7 @@ src/
 - Automatic data ingestion
 - Responsive design
 - Error handling and fallbacks
+- Production deployment on Vercel
 
 ✅ **Working Providers**
 - **Demo Mode**: ✅ Always works
