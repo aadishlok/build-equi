@@ -79,7 +79,7 @@ export default function Home() {
         };
         setMessages(prev => [...prev, errorMessage]);
       }
-    } catch (err) {
+    } catch {
       const errorMessage: Message = {
         role: 'assistant',
         content: 'Error contacting backend.',
@@ -105,7 +105,7 @@ export default function Home() {
         {/* Header */}
         <div className="p-4 border-b border-gray-700">
           <h1 className="text-xl font-semibold">Shakespeare AI</h1>
-          <p className="text-sm text-gray-400 mt-1">Ask about the Bard's works</p>
+          <p className="text-sm text-gray-400 mt-1">Ask about the Bard&apos;s works</p>
         </div>
         
         {/* New Chat Button */}
@@ -155,11 +155,11 @@ export default function Home() {
               <div className="text-center text-gray-500">
                 <div className="text-6xl mb-4">🎭</div>
                 <h2 className="text-2xl font-semibold mb-2">Shakespeare AI</h2>
-                <p className="text-gray-600 mb-4">Ask me anything about Shakespeare's works</p>
+                <p className="text-gray-600 mb-4">Ask me anything about Shakespeare&apos;s works</p>
                 <div className="text-sm text-gray-500">
-                  <p>• "What is the famous quote from Hamlet?"</p>
-                  <p>• "Tell me about Romeo and Juliet's love story"</p>
-                  <p>• "What themes are present in Macbeth?"</p>
+                  <p>&quot;What is the famous quote from Hamlet?&quot;</p>
+                  <p>&quot;Tell me about Romeo and Juliet&apos;s love story&quot;</p>
+                  <p>&quot;What themes are present in Macbeth?&quot;</p>
                 </div>
               </div>
             </div>

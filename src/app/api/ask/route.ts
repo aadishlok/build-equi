@@ -132,7 +132,7 @@ async function getVectorStore() {
     }
     
     // Load existing data
-    let allChunks: string[] = [];
+    const allChunks: string[] = [];
     for (const file of txtFiles) {
       const text = await fs.readFile(path.join(DATA_DIR, file), 'utf8');
       const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 200 });
@@ -193,8 +193,8 @@ Answer as helpfully and accurately as possible, citing specific passages when re
       answer,
       note: 'Powered by OpenAI with MIT OpenCourseWare Shakespeare data.'
     });
-  } catch (err: any) {
-    console.error('OpenAI RAG error:', err);
+  } catch (error: unknown) {
+    console.error('OpenAI RAG error:', error);
     
     // Fallback to demo mode if OpenAI fails
     try {
