@@ -77,7 +77,7 @@ async function fetchPlayText(playPath: string): Promise<string> {
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
     const allChunks: string[] = [];
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     // Embed and store in Chroma
     console.log(`Creating embeddings for ${allChunks.length} chunks...`);
     const embeddings = new OpenAIEmbeddings();
-    const vectorStore = await Chroma.fromTexts(
+    await Chroma.fromTexts(
       allChunks, 
       allChunks, 
       embeddings, 
@@ -122,8 +122,10 @@ export async function POST(req: NextRequest) {
       plays: totalPlays,
       works: SHAKESPEARE_WORKS.map(w => w.name)
     });
-  } catch (err: any) {
-    console.error('Ingestion error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (error: unknown) {
+    console.error('Ingestion error:', error);
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    }, { status: 500 });
   }
 } 

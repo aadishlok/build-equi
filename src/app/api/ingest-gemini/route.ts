@@ -1,46 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import path from 'path';
 import fs from 'fs/promises';
 
-const SHAKESPEARE_GITHUB_RAW = 'https://raw.githubusercontent.com/TheMITTech/shakespeare/master';
 const DATA_DIR = path.join(process.cwd(), 'shakespeare_data');
+const SHAKESPEARE_GITHUB_RAW = 'https://raw.githubusercontent.com/TheMITTech/shakespeare/master';
 
-// Simplified list of plays that are more likely to exist
+// Simplified list for Gemini ingestion
 const SHAKESPEARE_WORKS = [
-  'hamlet',
-  'macbeth', 
-  'romeo',
-  'julius_caesar',
-  'othello',
-  'king_lear',
-  'midsummer',
-  'merchant',
-  'tempest',
-  'twelfth_night'
+  { name: 'hamlet', path: 'hamlet/hamlet.html' },
+  { name: 'macbeth', path: 'macbeth/macbeth.html' },
+  { name: 'romeo_juliet', path: 'romeo_juliet/romeo_juliet.html' },
+  { name: 'lear', path: 'lear/lear.html' },
+  { name: 'othello', path: 'othello/othello.html' },
+  { name: 'julius_caesar', path: 'julius_caesar/julius_caesar.html' },
+  { name: 'merchant', path: 'merchant/merchant.html' },
+  { name: 'midsummer', path: 'midsummer/midsummer.html' },
+  { name: 'tempest', path: 'tempest/tempest.html' },
+  { name: 'twelfth_night', path: 'twelfth_night/twelfth_night.html' }
 ];
 
-async function fetchPlayText(playName: string): Promise<string> {
-  const playPath = `${playName}/${playName}.html`;
+async function fetchPlayText(playPath: string): Promise<string> {
   try {
     const url = `${SHAKESPEARE_GITHUB_RAW}/${playPath}`;
     const res = await axios.get(url);
     const $ = cheerio.load(res.data);
     
     // Remove script and style elements
-    $('script, style').remove();
+    $('script').remove();
+    $('style').remove();
     
-    // Extract text content
+    // Extract text content, focusing on the main play content
     let text = $('body').text();
     
     // Clean up the text
-    text = text
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-      .replace(/\[.*?\]/g, '') // Remove stage directions in brackets
-      .replace(/\n\s*\n/g, '\n') // Remove extra newlines
-      .trim();
+    text = text.replace(/\s+/g, ' ').trim();
+    text = text.replace(/\[.*?\]/g, ''); // Remove stage directions in brackets
+    text = text.replace(/\n\s*\n/g, '\n'); // Remove extra newlines
     
     return text;
   } catch (error) {
@@ -49,80 +46,53 @@ async function fetchPlayText(playName: string): Promise<string> {
   }
 }
 
-async function createSimpleEmbeddings(text: string): Promise<number[]> {
-  // Simple hash-based embedding for demo purposes
-  // In a real implementation, you'd use a proper embedding model
-  const hash = text.split('').reduce((a, b) => {
-    a = ((a << 5) - a) + b.charCodeAt(0);
-    return a & a;
-  }, 0);
-  
-  // Create a simple 128-dimensional vector based on the hash
-  const embedding = new Array(128).fill(0);
-  for (let i = 0; i < 128; i++) {
-    embedding[i] = Math.sin(hash + i) * 0.5;
-  }
-  
-  return embedding;
-}
-
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
-    // Ensure data directory exists
     await fs.mkdir(DATA_DIR, { recursive: true });
+    const allPlays: string[] = [];
+    let totalChunks = 0;
     
-    let totalPlays = 0;
-    let allChunks: string[] = [];
-    
-    console.log('Starting Gemini-powered ingestion...');
-    
-    for (const play of SHAKESPEARE_WORKS) {
-      console.log(`Ingesting ${play}...`);
-      const text = await fetchPlayText(play);
+    for (const work of SHAKESPEARE_WORKS) {
+      console.log(`Fetching ${work.name}...`);
+      const playText = await fetchPlayText(work.path);
       
-      if (text) {
-        // Simple text chunking
-        const chunks = text.match(/.{1,1000}/g) || [];
-        allChunks.push(...chunks);
-        totalPlays++;
+      if (playText.length > 100) {
+        // Save individual play files
+        await fs.writeFile(path.join(DATA_DIR, work.name + '.txt'), playText);
+        allPlays.push(work.name);
         
-        // Save individual play file
-        await fs.writeFile(path.join(DATA_DIR, `${play}.txt`), text);
-        console.log(`Saved ${play}.txt (${chunks.length} chunks)`);
+        // Count chunks (rough estimate for display)
+        const chunks = Math.ceil(playText.length / 1000);
+        totalChunks += chunks;
       }
     }
     
-    if (allChunks.length === 0) {
-      return NextResponse.json({ 
-        error: 'No Shakespeare data could be fetched. Please check the GitHub repository availability.' 
-      }, { status: 500 });
+    if (allPlays.length === 0) {
+      return NextResponse.json({ error: 'No Shakespeare works were successfully fetched.' }, { status: 500 });
     }
     
-    // Create a simple index file for the chunks
+    // Create a simple index file
     const indexData = {
-      totalPlays,
-      totalChunks: allChunks.length,
-      plays: SHAKESPEARE_WORKS.filter(play => 
-        fs.access(path.join(DATA_DIR, `${play}.txt`)).then(() => true).catch(() => false)
-      ),
-      timestamp: new Date().toISOString()
+      source: 'GitHub Repository',
+      totalPlays: allPlays.length,
+      totalChunks,
+      plays: allPlays,
+      timestamp: new Date().toISOString(),
+      note: 'Simplified ingestion for Gemini - individual play files'
     };
     
     await fs.writeFile(path.join(DATA_DIR, 'index.json'), JSON.stringify(indexData, null, 2));
     
-    console.log(`Ingestion complete! Processed ${totalPlays} plays with ${allChunks.length} total chunks.`);
-    
-    return NextResponse.json({
-      message: 'Shakespeare data ingested successfully using Gemini-powered processing',
-      plays: totalPlays,
-      chunks: allChunks.length,
-      note: 'Data saved to shakespeare_data directory. You can now use the Gemini-powered Q&A endpoints.'
+    return NextResponse.json({ 
+      message: 'Gemini ingestion complete', 
+      plays: allPlays.length,
+      chunks: totalChunks,
+      works: allPlays
     });
-    
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Gemini ingestion error:', error);
     return NextResponse.json({ 
-      error: error.message 
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
     }, { status: 500 });
   }
 } 

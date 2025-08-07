@@ -70,9 +70,9 @@ async function fetchMITShakespeareText(): Promise<string> {
 
     console.log(`Successfully fetched ${text.length} characters of Shakespeare text`);
     return text;
-  } catch (error) {
-    console.error('Error fetching MIT Shakespeare text:', error);
-    throw new Error(`Failed to fetch Shakespeare text from MIT: ${error}`);
+  } catch {
+    console.error('Error fetching MIT Shakespeare text');
+    throw new Error('Failed to fetch Shakespeare text from MIT');
   }
 }
 
@@ -111,9 +111,9 @@ async function autoIngestData(): Promise<{ store: Chroma; embeddings: OpenAIEmbe
     
     console.log(`Auto-ingestion complete: ${chunks.length} chunks from MIT source`);
     return { store: vectorStore, embeddings };
-  } catch (error) {
-    console.error('Auto-ingestion failed:', error);
-    throw error;
+  } catch {
+    console.error('Auto-ingestion failed');
+    throw new Error('Auto-ingestion failed');
   }
 }
 
@@ -149,7 +149,7 @@ async function getVectorStore() {
     embeddings = new OpenAIEmbeddings();
     vectorStore = await Chroma.fromTexts(allChunks, allChunks, embeddings, { collectionName: COLLECTION_NAME });
     return { store: vectorStore, embeddings };
-  } catch (error) {
+  } catch {
     // Directory doesn't exist or other error, trigger auto-ingestion
     return await autoIngestData();
   }
@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
     const results = await store.similaritySearchVectorWithScore(questionEmbedding, 5);
     
     // 2. Extract document content from results
-    const context = results.map(([doc, score]) => doc.pageContent).join('\n---\n');
+    const context = results.map(([doc]) => doc.pageContent).join('\n---\n');
     
     // 3. Call OpenAI LLM with context
     const llm = new ChatOpenAI({ 
@@ -211,8 +211,8 @@ Answer as helpfully and accurately as possible, citing specific passages when re
           note: 'OpenAI unavailable - using demo mode with pre-loaded Shakespeare knowledge.'
         });
       }
-    } catch (demoError) {
-      console.error('Demo fallback also failed:', demoError);
+    } catch {
+      console.error('Demo fallback also failed');
     }
     
     return NextResponse.json({ 
