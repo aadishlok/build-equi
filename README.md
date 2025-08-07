@@ -1,22 +1,29 @@
-# Shakespeare AI Q&A with RAG (Next.js)
+# Shakespeare AI - ChatGPT-Style Q&A System
 
-A sophisticated AI-powered question-answering system for Shakespeare's complete works, built with Next.js and RAG (Retrieval-Augmented Generation).
+A modern, ChatGPT-style interface for asking complex questions about Shakespeare's complete works. Built with Next.js, featuring multiple AI providers and automatic data ingestion.
 
-## Features
+## 🎭 Features
 
-- **Complete Shakespeare Corpus**: Ingests all works from [MIT OpenCourseWare](https://ocw.mit.edu/ans7870/6/6.006/s08/lecturenotes/files/t8.shakespeare.txt)
-- **Advanced RAG Pipeline**: Uses OpenAI embeddings and ChromaDB for intelligent retrieval
-- **Multiple AI Providers**: Support for OpenAI and Google Gemini
-- **Modern UI**: Clean, responsive interface with chat-style Q&A
-- **Local Vector Database**: Fast, private retrieval using ChromaDB
-- **Context-Aware Answers**: AI responses based on relevant Shakespeare passages
-- **Demo Mode**: Works immediately without requiring full ingestion
+- **ChatGPT-Style UI**: Modern chat interface with dark sidebar and message bubbles
+- **Multiple AI Providers**: OpenAI GPT-3.5, Google Gemini, and Demo Mode
+- **Automatic Ingestion**: No manual setup required - data is ingested automatically
+- **MIT OpenCourseWare Source**: High-quality Shakespeare complete works
+- **RAG System**: Retrieval-Augmented Generation for accurate answers
+- **Responsive Design**: Works on desktop and mobile devices
 
-## Setup Instructions
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- OpenAI API key (optional, for GPT-3.5)
+- Google Gemini API key (recommended)
+
+### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/aadishlok/build-equi.git
    cd build-equi
    ```
 
@@ -25,182 +32,180 @@ A sophisticated AI-powered question-answering system for Shakespeare's complete 
    npm install
    ```
 
-3. **Set up API keys** (optional for full functionality)
-   - Create a file called `.env.local` in the root directory
-   - Add the following lines:
-     ```
-     # OpenAI (for embeddings and GPT-3.5)
-     OPENAI_API_KEY=your-openai-key-here
-     
-     # Google Gemini (alternative to OpenAI) - WORKING!
-     GEMINI_API_KEY=your-gemini-key-here
-     ```
-   - (Do NOT commit your API keys to version control)
+3. **Set up API keys** (create `.env.local`)
+   ```bash
+   # OpenAI (optional)
+   OPENAI_API_KEY=your_openai_key_here
+   
+   # Google Gemini (recommended)
+   GEMINI_API_KEY=your_gemini_key_here
+   ```
 
-4. **Start the application**
+4. **Start the development server**
    ```bash
    npm run dev
    ```
 
-5. **Visit the application**
-   - Open [http://localhost:3000](http://localhost:3000) in your browser
-   - Select your preferred AI provider from the dropdown
-   - Ask questions about Shakespeare's works!
-
-## Usage
-
-### Demo Mode (Works Immediately) ✅
-The application includes a demo mode that works without any setup:
-- Ask questions about Hamlet, Macbeth, Romeo & Juliet, and general Shakespeare themes
-- Get instant responses with famous quotes and character information
-- No API key or ingestion required
-
-### Gemini Mode (Recommended) ✅
-**Google Gemini API is now working and recommended!**
-- High-quality responses with good availability
-- No quota issues like OpenAI
-- Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-
-### Full RAG Mode (Requires Setup)
-For complete functionality with all Shakespeare works:
-
-1. **Ensure you have at least one valid API key** in `.env.local`
-2. **Ingest Shakespeare's works**:
-   ```bash
-   # For MIT source (recommended - high quality)
-   curl -X POST http://localhost:3000/api/ingest-mit
-   
-   # For Gemini (alternative)
-   curl -X POST http://localhost:3000/api/ingest-gemini
-   
-   # For OpenAI (may have quota issues)
-   curl -X POST http://localhost:3000/api/ingest
+5. **Open your browser**
    ```
-3. **Select your preferred AI provider** from the dropdown
-4. **Ask questions** - the system will use the full RAG pipeline
+   http://localhost:3000
+   ```
 
-## AI Provider Options
+## 🎯 Usage
 
-### Demo Mode (Offline) ✅
-- **Pros**: Works immediately, no API key required
-- **Cons**: Limited to predefined responses
-- **Best for**: Quick testing and demonstration
+### AI Providers
 
-### Google Gemini ✅ **RECOMMENDED**
-- **Pros**: High quality responses, good availability, no quota issues
-- **Cons**: Requires API key
-- **Setup**: Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-- **Status**: ✅ Working and tested
+1. **Demo Mode** (Recommended for testing)
+   - Works immediately without API keys
+   - Pre-loaded Shakespeare knowledge
+   - Perfect for demonstrations
 
-### OpenAI GPT-3.5 ⚠️
-- **Pros**: High quality responses, widely used
-- **Cons**: Can have quota limits, requires API key
-- **Setup**: Get API key from [OpenAI Platform](https://platform.openai.com/)
-- **Status**: ⚠️ May have quota issues
+2. **Google Gemini** (Recommended for production)
+   - High-quality responses
+   - Comprehensive Shakespeare knowledge
+   - Automatic data ingestion
 
-## Example Questions
+3. **OpenAI GPT-3.5** (Advanced)
+   - Full RAG system with vector embeddings
+   - Automatic data ingestion on first use
+   - Requires OpenAI API key
 
-- "What does Hamlet say about death?"
-- "Tell me about the relationship between Romeo and Juliet"
-- "What are the main themes in Macbeth?"
-- "What does 'To be or not to be' mean in context?"
-- "Describe the character of Lady Macbeth"
+### Example Questions
 
-## Technical Architecture
+- "What is the famous quote from Hamlet?"
+- "Tell me about Romeo and Juliet's love story"
+- "What themes are present in Macbeth?"
+- "Who is the main character in Othello?"
+- "What happens in the final scene of King Lear?"
 
-### Data Pipeline
-- **Source**: [MIT OpenCourseWare Shakespeare](https://ocw.mit.edu/ans7870/6/6.006/s08/lecturenotes/files/t8.shakespeare.txt)
-- **Ingestion**: Automated processing of complete works
-- **Processing**: Text chunking with 1000-character chunks and 200-character overlap
-- **Storage**: Local ChromaDB vector database
-
-### RAG System
-- **Embeddings**: OpenAI text-embedding-ada-002
-- **Vector Store**: ChromaDB with similarity search
-- **LLM Options**: OpenAI GPT-3.5, Google Gemini
-- **Retrieval**: Top 5 most relevant chunks per question
+## 🏗️ Technical Architecture
 
 ### Frontend
-- **Framework**: Next.js 15 with App Router
-- **Styling**: Tailwind CSS
-- **State Management**: React hooks for local state
-- **API**: RESTful endpoints for ingestion and Q&A
+- **Next.js 14** with App Router
+- **React** with TypeScript
+- **Tailwind CSS** for styling
+- **ChatGPT-style UI** with dark sidebar and message bubbles
 
-## Design Tradeoffs
+### Backend
+- **API Routes** for different AI providers
+- **Automatic Data Ingestion** - no manual setup required
+- **RAG System** with vector embeddings (OpenAI)
+- **Keyword Search** with comprehensive text (Gemini)
 
-- **MIT OpenCourseWare Source**: High-quality, complete works from reputable source
-- **Multiple AI Providers**: Redundancy and choice for users
-- **Google Gemini**: Recommended for best availability and performance
-- **Local Vector DB**: ChromaDB for privacy and fast retrieval
-- **Simple UI**: Focused on usability over complex features
-- **Demo Mode**: Ensures immediate functionality without setup
-- **In-Memory Storage**: Fast but requires re-ingestion on server restart
+### Data Sources
+- **MIT OpenCourseWare**: Complete Shakespeare works
+- **GitHub Repository**: Individual play files
+- **Demo Mode**: Pre-loaded knowledge base
 
-## API Endpoints
+## 📡 API Endpoints
 
-- `POST /api/ingest-mit`: Ingests Shakespeare's works from MIT OpenCourseWare (recommended)
-- `POST /api/ingest`: Ingests Shakespeare's works using OpenAI (may have quota issues)
-- `POST /api/ingest-gemini`: Ingests Shakespeare's works using Gemini (alternative)
-- `POST /api/ask`: Answers questions using OpenAI GPT-3.5 (requires ingestion)
-- `POST /api/ask-gemini`: Answers questions using Google Gemini (requires ingestion) ✅
-- `POST /api/demo`: Provides demo responses using famous quotes (works immediately) ✅
+### Q&A Endpoints
+- `POST /api/demo` - Demo mode (no API key required)
+- `POST /api/ask-gemini` - Google Gemini (recommended)
+- `POST /api/ask` - OpenAI GPT-3.5 with RAG
 
-## Development
+### Ingestion Endpoints
+- `POST /api/ingest-mit` - MIT OpenCourseWare source
+- `POST /api/ingest` - GitHub repository source
+- `POST /api/ingest-gemini` - Legacy Gemini ingestion
 
+## 🔧 Development
+
+### Available Scripts
 ```bash
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
 ```
 
-## Troubleshooting
+### Project Structure
+```
+src/
+├── app/
+│   ├── api/         # API routes
+│   ├── globals.css  # Global styles
+│   ├── layout.tsx   # Root layout
+│   └── page.tsx     # Main chat interface
+├── components/      # React components
+└── lib/            # Utility functions
+```
 
-- **Demo Mode**: Works immediately without any setup ✅
-- **Gemini API**: Working and recommended for best experience ✅
-- **API Key Issues**: If you get quota errors, try Gemini or use demo mode
-- **Ingestion Issues**: Check your API keys and internet connection
-- **No Answers**: Ensure ingestion completed successfully for full RAG mode
-- **Slow Responses**: First query may be slow due to vector store initialization
+## 🎨 UI Features
 
-## Current Status
+### ChatGPT-Style Interface
+- **Dark Sidebar**: AI provider selection and chat history
+- **Message Bubbles**: User (blue) and assistant (gray) messages
+- **Typing Indicators**: Animated dots during processing
+- **Auto-resizing Input**: Textarea that grows with content
+- **Keyboard Shortcuts**: Enter to send, Shift+Enter for new line
 
-✅ **Working Features:**
-- Demo mode with instant responses
-- Google Gemini API integration (recommended)
-- MIT OpenCourseWare Shakespeare source
-- Multiple AI provider support
-- Modern UI with chat interface
-- Support for all Shakespeare works
-- Fallback system for API issues
+### Responsive Design
+- **Desktop**: Full sidebar and chat area
+- **Mobile**: Optimized for touch interaction
+- **Accessibility**: Proper focus states and screen reader support
 
-⚠️ **Known Issues:**
-- OpenAI API quota exceeded (use Gemini instead)
-- Full RAG requires valid API key for ingestion
+## 🔒 Security & Privacy
 
-## Quick Start with MIT Source
+- **API Keys**: Stored securely in `.env.local` (not in repository)
+- **Data Privacy**: No user data is stored or transmitted
+- **Local Processing**: All data processing happens locally
+- **Secure Headers**: Proper CORS and security headers
 
-1. **Get a Gemini API key** from [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. **Add to `.env.local`**:
-   ```
-   GEMINI_API_KEY=your-gemini-key-here
-   ```
-3. **Start the app**: `npm run dev`
-4. **Ingest MIT data**: `curl -X POST http://localhost:3000/api/ingest-mit`
-5. **Visit**: http://localhost:3000
-6. **Select "Google Gemini"** from the dropdown
-7. **Ask questions** about Shakespeare!
+## 🐛 Troubleshooting
 
-## Future Enhancements
+### Common Issues
 
-- [ ] Persistent vector store across server restarts
-- [ ] Better text preprocessing for improved retrieval
-- [ ] Support for poetry and sonnets
-- [ ] Advanced filtering by play/character/theme
-- [ ] Export conversation history
-- [ ] Mobile-optimized interface
-- [ ] More AI provider integrations
+1. **"OpenAI unavailable" message**
+   - Try using Google Gemini instead
+   - Check your OpenAI API key and quota
+   - Demo mode always works
+
+2. **"Data not found" error**
+   - Data is automatically ingested on first use
+   - Check console logs for ingestion progress
+   - Try a different AI provider
+
+3. **Font loading warnings**
+   - These are harmless - fallback fonts are used
+   - Application works perfectly without Google Fonts
+
+4. **Slow first response**
+   - First OpenAI request triggers automatic data ingestion
+   - Subsequent requests are much faster
+   - Use Gemini for immediate responses
+
+### Performance Tips
+- **Gemini**: Fastest responses, no setup required
+- **Demo Mode**: Instant responses, works offline
+- **OpenAI**: Best for complex analysis, requires ingestion
+
+## 📊 Current Status
+
+✅ **Complete Features**
+- ChatGPT-style UI with dark theme
+- Multiple AI providers (Demo, Gemini, OpenAI)
+- Automatic data ingestion
+- Responsive design
+- Error handling and fallbacks
+
+✅ **Working Providers**
+- **Demo Mode**: ✅ Always works
+- **Google Gemini**: ✅ Recommended
+- **OpenAI GPT-3.5**: ✅ With automatic ingestion
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is open source and available under the MIT License.
+
+---
+
+**Built with ❤️ for Shakespeare enthusiasts and AI developers**
