@@ -1,0 +1,15 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "functions": {
+    "src/app/api/*/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "OPENAI_API_KEY": "@openai_api_key",
+    "GEMINI_API_KEY": "@gemini_api_key"
+  }
+} 

@@ -5,125 +5,111 @@ import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import path from 'path';
 import fs from 'fs/promises';
 import axios from 'axios';
-import * as cheerio from 'cheerio';
 
 const DATA_DIR = path.join(process.cwd(), 'shakespeare_data');
 const COLLECTION_NAME = 'shakespeare';
-
-// List of Shakespeare plays for automatic ingestion
-const SHAKESPEARE_WORKS = [
-  { name: 'hamlet', path: 'hamlet/hamlet.html' },
-  { name: 'macbeth', path: 'macbeth/macbeth.html' },
-  { name: 'romeo_juliet', path: 'romeo_juliet/romeo_juliet.html' },
-  { name: 'lear', path: 'lear/lear.html' },
-  { name: 'othello', path: 'othello/othello.html' },
-  { name: 'julius_caesar', path: 'julius_caesar/julius_caesar.html' },
-  { name: 'merchant', path: 'merchant/merchant.html' },
-  { name: 'midsummer', path: 'midsummer/midsummer.html' },
-  { name: 'tempest', path: 'tempest/tempest.html' },
-  { name: 'twelfth_night', path: 'twelfth_night/twelfth_night.html' },
-  { name: 'much_ado', path: 'much_ado/much_ado.html' },
-  { name: 'asyoulikeit', path: 'asyoulikeit/asyoulikeit.html' },
-  { name: 'taming_shrew', path: 'taming_shrew/taming_shrew.html' },
-  { name: 'merry_wives', path: 'merry_wives/merry_wives.html' },
-  { name: 'comedy_errors', path: 'comedy_errors/comedy_errors.html' },
-  { name: 'two_gentlemen', path: 'two_gentlemen/two_gentlemen.html' },
-  { name: 'measure', path: 'measure/measure.html' },
-  { name: 'allswell', path: 'allswell/allswell.html' },
-  { name: 'cymbeline', path: 'cymbeline/cymbeline.html' },
-  { name: 'pericles', path: 'pericles/pericles.html' },
-  { name: 'winters_tale', path: 'winters_tale/winters_tale.html' },
-  { name: 'henryv', path: 'henryv/henryv.html' },
-  { name: 'henryviii', path: 'henryviii/henryviii.html' },
-  { name: 'richardii', path: 'richardii/richardii.html' },
-  { name: 'richardiii', path: 'richardiii/richardiii.html' },
-  { name: 'john', path: 'john/john.html' },
-  { name: '1henryiv', path: '1henryiv/1henryiv.html' },
-  { name: '2henryiv', path: '2henryiv/2henryiv.html' },
-  { name: '1henryvi', path: '1henryvi/1henryvi.html' },
-  { name: '2henryvi', path: '2henryvi/2henryvi.html' },
-  { name: '3henryvi', path: '3henryvi/3henryvi.html' },
-  { name: 'cleopatra', path: 'cleopatra/cleopatra.html' },
-  { name: 'coriolanus', path: 'coriolanus/coriolanus.html' },
-  { name: 'titus', path: 'titus/titus.html' },
-  { name: 'timon', path: 'timon/timon.html' },
-  { name: 'troilus_cressida', path: 'troilus_cressida/troilus_cressida.html' },
-  { name: 'lll', path: 'lll/lll.html' }
-];
+const MIT_SHAKESPEARE_URL = 'https://ocw.mit.edu/ans7870/6/6.006/s08/lecturenotes/files/t8.shakespeare.txt';
 
 let vectorStore: Chroma | null = null;
 let embeddings: OpenAIEmbeddings | null = null;
 
-async function fetchPlayText(playPath: string): Promise<string> {
+async function fetchMITShakespeareText(): Promise<string> {
   try {
-    const url = `https://raw.githubusercontent.com/TheMITTech/shakespeare/master/${playPath}`;
-    const res = await axios.get(url);
-    const $ = cheerio.load(res.data);
-    
-    // Remove script and style elements
-    $('script').remove();
-    $('style').remove();
-    
-    // Extract text content, focusing on the main play content
-    let text = $('body').text();
-    
-    // Clean up the text
-    text = text.replace(/\s+/g, ' ').trim();
-    text = text.replace(/\[.*?\]/g, ''); // Remove stage directions in brackets
-    text = text.replace(/\n\s*\n/g, '\n'); // Remove extra newlines
-    
+    console.log('Fetching Shakespeare text from MIT OpenCourseWare...');
+    const response = await axios.get(MIT_SHAKESPEARE_URL);
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to fetch from MIT: ${response.status}`);
+    }
+
+    let text = response.data;
+
+    // Clean up the text - remove Project Gutenberg headers and metadata
+    const startMarkers = [
+      'THE COMPLETE WORKS OF WILLIAM SHAKESPEARE',
+      'THE SONNETS',
+      'VENUS AND ADONIS',
+      'THE RAPE OF LUCRECE',
+      'THE PHOENIX AND THE TURTLE',
+      'A LOVER\'S COMPLAINT'
+    ];
+
+    let startIndex = -1;
+    for (const marker of startMarkers) {
+      const index = text.indexOf(marker);
+      if (index !== -1) {
+        startIndex = index;
+        break;
+      }
+    }
+
+    if (startIndex === -1) {
+      const playMarkers = ['HAMLET', 'MACBETH', 'ROMEO AND JULIET', 'JULIUS CAESAR'];
+      for (const marker of playMarkers) {
+        const index = text.indexOf(marker);
+        if (index !== -1) {
+          startIndex = index;
+          break;
+        }
+      }
+    }
+
+    if (startIndex !== -1) {
+      text = text.substring(startIndex);
+    }
+
+    text = text
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/\n\s*\n/g, '\n\n')
+      .replace(/\[.*?\]/g, '')
+      .replace(/\s+/g, ' ')
+      .replace(/<<.*?>>/g, '')
+      .replace(/THIS ELECTRONIC VERSION.*?PERMISSION\./g, '')
+      .trim();
+
+    console.log(`Successfully fetched ${text.length} characters of Shakespeare text`);
     return text;
   } catch (error) {
-    console.error(`Error fetching ${playPath}:`, error);
-    return '';
+    console.error('Error fetching MIT Shakespeare text:', error);
+    throw new Error(`Failed to fetch Shakespeare text from MIT: ${error}`);
   }
 }
 
 async function autoIngestData(): Promise<{ store: Chroma; embeddings: OpenAIEmbeddings }> {
-  console.log('Auto-ingesting Shakespeare data...');
+  console.log('Auto-ingesting Shakespeare data from MIT source...');
   
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
-    const allChunks: string[] = [];
-    let totalPlays = 0;
     
-    // Fetch a subset of plays for faster ingestion
-    const corePlays = SHAKESPEARE_WORKS.slice(0, 10); // Start with 10 plays
+    // Fetch MIT Shakespeare text
+    const fullText = await fetchMITShakespeareText();
     
-    for (const work of corePlays) {
-      console.log(`Auto-ingesting ${work.name}...`);
-      const playText = await fetchPlayText(work.path);
-      
-      if (playText.length > 100) {
-        // Save raw text for reference
-        await fs.writeFile(path.join(DATA_DIR, work.name + '.txt'), playText);
-        
-        // Chunk text
-        const splitter = new RecursiveCharacterTextSplitter({ 
-          chunkSize: 1000, 
-          chunkOverlap: 200 
-        });
-        const chunks = await splitter.splitText(playText);
-        allChunks.push(...chunks);
-        totalPlays++;
-      }
-    }
+    // Save the complete works
+    await fs.writeFile(path.join(DATA_DIR, 'complete_works.txt'), fullText);
     
-    if (allChunks.length === 0) {
-      throw new Error('Failed to ingest any Shakespeare data');
+    // Chunk the text
+    const splitter = new RecursiveCharacterTextSplitter({ 
+      chunkSize: 1000, 
+      chunkOverlap: 200 
+    });
+    const chunks = await splitter.splitText(fullText);
+    
+    if (chunks.length === 0) {
+      throw new Error('Failed to create chunks from Shakespeare data');
     }
     
     // Create embeddings and vector store
-    console.log(`Creating embeddings for ${allChunks.length} chunks...`);
+    console.log(`Creating embeddings for ${chunks.length} chunks...`);
     embeddings = new OpenAIEmbeddings();
     vectorStore = await Chroma.fromTexts(
-      allChunks, 
-      allChunks, 
+      chunks, 
+      chunks, 
       embeddings, 
       { collectionName: COLLECTION_NAME }
     );
     
-    console.log(`Auto-ingestion complete: ${totalPlays} plays, ${allChunks.length} chunks`);
+    console.log(`Auto-ingestion complete: ${chunks.length} chunks from MIT source`);
     return { store: vectorStore, embeddings };
   } catch (error) {
     console.error('Auto-ingestion failed:', error);
@@ -205,7 +191,7 @@ Answer as helpfully and accurately as possible, citing specific passages when re
     
     return NextResponse.json({ 
       answer,
-      note: 'Data was automatically ingested for this response.'
+      note: 'Powered by OpenAI with MIT OpenCourseWare Shakespeare data.'
     });
   } catch (err: any) {
     console.error('OpenAI RAG error:', err);
@@ -231,7 +217,7 @@ Answer as helpfully and accurately as possible, citing specific passages when re
     
     return NextResponse.json({ 
       error: 'Unable to process your question. Please try again or use a different AI provider.',
-      note: 'The system attempted to auto-ingest data but encountered an error. Try using Gemini or Demo mode instead.'
+      note: 'Try using Google Gemini or Demo mode for immediate responses.'
     }, { status: 500 });
   }
 } 
